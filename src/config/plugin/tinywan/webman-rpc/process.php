@@ -8,9 +8,9 @@
 
 return [
     // 自定义Text协议
-    'rpc.text.protocol' => [
+    'text.protocol' => [
         'handler'=> \Tinywan\WebmanRpc\Protocol\RpcTextProtocol::class,
-        'listen' => config('plugin.tinywan.nacos.app.webman-rpc.listen_text_address'),
+        'listen' => config('plugin.tinywan.webman-rpc.app.rpc.listen_text_address'),
         'count'  => 10, // 根据配置文件调整
     ]
 ];
