@@ -1,0 +1,22 @@
+{
+  "name": "tinywan/webman-rpc",
+  "description": "webman rpc plugin",
+  "keywords": ["webman", "rpc", "plugin"],
+  "type": "library",
+  "license": "MIT",
+  "require": {
+    "php": ">=7.4",
+    "workerman/webman-framework": "^1.2.1",
+    "ext-json": "*"
+  },
+  "autoload": {
+    "psr-4": {
+      "Tinywan\\WebmanRpc\\": "src"
+    }
+  },
+  "require-dev": {
+    "workerman/webman": "^1.0",
+    "phpstan/phpstan": "^1.4",
+    "friendsofphp/php-cs-fixer": "^3.6"
+  }
+}
