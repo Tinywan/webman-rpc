@@ -23,7 +23,7 @@ class RpcTextProtocol
     {
         static $instances = [];
         $data = json_decode($data, true);
-        $class = 'service\\'.$data['class'];
+        $class = config('plugin.tinywan.webman-rpc.app.rpc.namespace').$data['class'];
         $method = $data['method'];
         $args = $data['args'];
         if (!isset($instances[$class])) {
