@@ -9,8 +9,8 @@ class Install
      * @var array
      */
     protected static $pathRelation = array (
-  'config/plugin/tinywan/webman-rpc' => 'config/plugin/tinywan/webman-rpc',
-);
+      'config/plugin/tinywan/webman-rpc' => 'config/plugin/tinywan/webman-rpc',
+    );
 
     /**
      * Install
