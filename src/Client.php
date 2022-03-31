@@ -7,10 +7,9 @@
  */
 declare(strict_types=1);
 
-namespace Tinywan\WebmanRpc;
+namespace Tinywan\Rpc;
 
-
-use Tinywan\WebmanRpc\Exception\RpcUnexpectedValueException;
+use Tinywan\Rpc\Exception\RpcUnexpectedValueException;
 
 class Client
 {

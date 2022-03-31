@@ -1,11 +1,20 @@
-# webman-rpc
+# simple rpc service for webman plugin
 
+simple rpc service for webman plugin
 
-## 服务端服务
+## 安装
+
+```shell
+composer require tinywan/rpc
+```
+
+## 使用
+
+### 服务端服务
 
 新建 `service/User.php` 服务(目录不存在自行创建)
+
 ```php
-<?php
 namespace service;
 class User
 {
@@ -18,19 +27,38 @@ class User
     }
 }
 ```
-## 客户端调用
+### 客户端调用
+
 ```php
-use Tinywan\WebmanRpc\Client;
+use Tinywan\Rpc\Client;
 $request = [
     'class'   => 'User',
     'method'  => 'get',
-    'args'    => [2022], // 100 是 $uid
+    'args'    => [2022]
 ];
-$client = new Client();
+$client = new Client('tcp://127.0.0.1:9512');
 $res = $client->request($request);
+var_export($res);
 ```
+
+或者
+
+```php
+$client = stream_socket_client('tcp://127.0.0.1:9512');
+$request = [
+    'class'   => 'User',
+    'method'  => 'get',
+    'args'    => [2022]
+];
+fwrite($client, json_encode($request)."\n"); // text协议末尾有个换行符"\n"
+$result = fgets($client, 10240000);
+$result = json_decode($result, true);
+var_export($result);
+```
+
 最终结果打印
-```
+
+```phpregexp
 array (
   'uid' => 2022,
   'name' => 'webman',
@@ -43,4 +71,3 @@ array (
 $foo = new foo;
 call_user_func_array([$foo, "bar"], ["three", "four"]);
 ```
-> https://www.workerman.net/q/6057

@@ -1,4 +1,5 @@
 <?php
+
 return [
     'enable' => true,
     'rpc' => [

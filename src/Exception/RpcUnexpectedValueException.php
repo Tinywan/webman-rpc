@@ -7,10 +7,8 @@
  */
 declare(strict_types=1);
 
-namespace Tinywan\WebmanRpc\Exception;
-
+namespace Tinywan\Rpc\Exception;
 
 class RpcUnexpectedValueException extends \UnexpectedValueException
 {
-
 }

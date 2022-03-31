@@ -7,8 +7,7 @@
  */
 declare(strict_types=1);
 
-namespace Tinywan\WebmanRpc\Protocol;
-
+namespace Tinywan\Rpc\Protocol;
 
 use Workerman\Connection\TcpConnection;
 
@@ -22,11 +21,11 @@ class RpcTextProtocol
     {
         static $instances = [];
         $data = json_decode($data, true);
-        $class = config('plugin.tinywan.webman-rpc.app.rpc.namespace').$data['class'];
+        $class = config('plugin.tinywan.rpc.app.rpc.namespace').$data['class'];
         $method = $data['method'];
         $args = $data['args'];
         if (!isset($instances[$class])) {
-            $instances[$class] = new $class;
+            $instances[$class] = new $class();
         }
         $connection->send(call_user_func_array([$instances[$class], $method], $args));
     }

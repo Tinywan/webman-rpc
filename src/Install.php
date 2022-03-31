@@ -1,15 +1,16 @@
 <?php
-namespace Tinywan\WebmanRpc;
+
+namespace Tinywan\Rpc;
 
 class Install
 {
-    const WEBMAN_PLUGIN = true;
+    public const WEBMAN_PLUGIN = true;
 
     /**
      * @var array
      */
-    protected static $pathRelation = array (
-      'config/plugin/tinywan/webman-rpc' => 'config/plugin/tinywan/webman-rpc',
+    protected static $pathRelation = array(
+      'config/plugin/tinywan/rpc' => 'config/plugin/tinywan/rpc',
     );
 
     /**
@@ -70,5 +71,4 @@ class Install
             remove_dir($path);
         }
     }
-    
 }
