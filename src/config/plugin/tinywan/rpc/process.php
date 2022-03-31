@@ -1,11 +1,4 @@
 <?php
-/**
- * @desc ${NAME}
- * @author Tinywan(ShaoBo Wan)
- * @email 756684177@qq.com
- * @date 2022/3/20 0:34
- */
-
 return [
     // 自定义Text协议
     'text.protocol' => [
