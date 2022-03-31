@@ -32,6 +32,7 @@ class User
 ```
 ### 客户端调用
 
+webman框架使用
 ```php
 use Tinywan\Rpc\Client;
 $request = [
@@ -44,7 +45,7 @@ $res = $client->request($request);
 var_export($res);
 ```
 
-或者
+非webman框架使用
 
 ```php
 $client = stream_socket_client('tcp://127.0.0.1:9512');
