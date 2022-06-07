@@ -1,6 +1,7 @@
 <?php
 /**
  * @desc Client
+ *
  * @author Tinywan(ShaoBo Wan)
  * @email 756684177@qq.com
  * @date 2022/3/20 1:03
@@ -16,11 +17,10 @@ class Client
     /**
      * @var string
      */
-    private string $address;
+    private $address;
 
     /**
      * Client constructor.
-     * @param string $address
      */
     public function __construct(string $address)
     {
@@ -28,7 +28,6 @@ class Client
     }
 
     /**
-     * @param array $param
      * @return mixed
      */
     public function request(array $param)
@@ -39,6 +38,7 @@ class Client
         }
         fwrite($client, json_encode($param)."\n");
         $result = fgets($client, 10240000);
+
         return json_decode($result, true);
     }
 }

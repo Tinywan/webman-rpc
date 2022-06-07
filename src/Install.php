@@ -9,12 +9,13 @@ class Install
     /**
      * @var array
      */
-    protected static $pathRelation = array(
-      'config/plugin/tinywan/rpc' => 'config/plugin/tinywan/rpc',
-    );
+    protected static $pathRelation = [
+        'config/plugin/tinywan/rpc' => 'config/plugin/tinywan/rpc',
+    ];
 
     /**
-     * Install
+     * Install.
+     *
      * @return void
      */
     public static function install()
@@ -23,7 +24,8 @@ class Install
     }
 
     /**
-     * Uninstall
+     * Uninstall.
+     *
      * @return void
      */
     public static function uninstall()
@@ -32,7 +34,8 @@ class Install
     }
 
     /**
-     * installByRelation
+     * installByRelation.
+     *
      * @return void
      */
     public static function installByRelation()
@@ -44,15 +47,16 @@ class Install
                     mkdir($parent_dir, 0777, true);
                 }
             }
-            //symlink(__DIR__ . "/$source", base_path()."/$dest");
-            copy_dir(__DIR__ . "/$source", base_path()."/$dest");
+            // symlink(__DIR__ . "/$source", base_path()."/$dest");
+            copy_dir(__DIR__."/$source", base_path()."/$dest");
             echo "Create $dest
 ";
         }
     }
 
     /**
-     * uninstallByRelation
+     * uninstallByRelation.
+     *
      * @return void
      */
     public static function uninstallByRelation()
@@ -66,6 +70,7 @@ class Install
 ";
             if (is_file($path) || is_link($path)) {
                 unlink($path);
+
                 continue;
             }
             remove_dir($path);
