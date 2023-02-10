@@ -49,7 +49,10 @@ var_export($res);
 非webman框架使用
 
 ```php
-$client = stream_socket_client('tcp://127.0.0.1:9512');
+$client = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
+if (false === $client) {
+    throw new \Exception('rpc failed to connect: '.$errorMessage);
+}
 $request = [
     'class'   => 'User',
     'method'  => 'get',
