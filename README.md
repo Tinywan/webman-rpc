@@ -76,3 +76,16 @@ array (
 $foo = new foo;
 call_user_func_array([$foo, "bar"], ["three", "four"]);
 ```
+
+## 在client端发起一个远程伪代码中
+
+client端调用server端 如果server端的代码为本地则是本地调用，如果server端的代码在另外一台机器就需要远程调用（Rpc协议）
+
+1. 服务端通过插件tinywan/rpc自定义进程实现一个文本text协议服务
+2. 客户端将Server和B方法，以及B方法可能带有的参数序列化
+3. 通过stream_socket_client把序列化的消息发送给服务端
+4. 服务端接收消息并反序列化
+5. 通过反射调用调用服务端的Server类下的B方法
+6. 服务端Server类B方法返回的结果序列化
+7. 将返回的序列化结果通过stream_socket_client发送给客户端
+8. 客户端通过反序列化得到结果
