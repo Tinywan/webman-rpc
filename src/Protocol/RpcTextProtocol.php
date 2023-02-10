@@ -15,18 +15,33 @@ class RpcTextProtocol
 {
     /**
      * @param TcpConnection $connection
-     * @param $data
+     * @param string $data
+     * @return bool|null
      */
-    public function onMessage(TcpConnection $connection, $data)
+    public function onMessage(TcpConnection $connection, string $data): ?bool
     {
         static $instances = [];
         $data = json_decode($data, true);
-        $class = config('plugin.tinywan.rpc.app.rpc.namespace').$data['class'];
+        $config = config('plugin.tinywan.rpc.app');
+        $class = $config['rpc']['namespace'].$data['class'];
+        if (!class_exists($class)) {
+            return $connection->send(json_encode([
+                'code' => $config['response']['class']['code'],
+                'msg' => $class. $config['response']['class']['msg']
+            ]));
+        }
+
         $method = $data['method'];
+        if (!method_exists($class,(string) $method)) {
+            return $connection->send(json_encode([
+                'code' => $config['response']['method']['code'],
+                'msg' => $method. $config['response']['method']['msg']
+            ]));
+        }
         $args = $data['args'];
         if (!isset($instances[$class])) {
             $instances[$class] = new $class();
         }
-        $connection->send(call_user_func_array([$instances[$class], $method], $args));
+        return $connection->send(call_user_func_array([$instances[$class], $method], $args));
     }
 }
