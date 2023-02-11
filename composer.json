@@ -20,7 +20,7 @@
       "Tinywan\\Rpc\\": "src"
     },
     "files": [
-      "./function.php"
+      "src/function.php"
     ]
   },
   "require-dev": {
