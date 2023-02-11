@@ -22,55 +22,75 @@ composer require tinywan/rpc
 namespace service;
 class User
 {
-    public function get($uid)
+    public function get($args)
     {
-        return json_encode([
-            'uid'  => $uid,
-            'name' => 'webman'
-        ]);
+        return json_encode($args);
     }
 }
 ```
 ### 客户端调用
 
-webman框架使用
+#### webman框架使用
 ```php
 use Tinywan\Rpc\Client;
 $request = [
     'class'   => 'User',
     'method'  => 'get',
-    'args'    => [2022]
+    'args'    => [
+        [
+            'uid' => 2023,
+            'username' => 'Tinywan',
+       ]
+    ]
 ];
 $client = new Client('tcp://127.0.0.1:9512');
 $res = $client->request($request);
 var_export($res);
 ```
 
-非webman框架使用
+#### 非webman框架使用
 
 ```php
+// 建立socket连接到内部推送端口
 $client = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
 if (false === $client) {
     throw new \Exception('rpc failed to connect: '.$errorMessage);
 }
 $request = [
-    'class'   => 'User',
+    'class'   => 'user',
     'method'  => 'get',
-    'args'    => [2022]
+    'args'    => [
+        [
+            'uid' => 2023,
+            'username' => 'Tinywan',
+        ]
+    ]
 ];
-fwrite($client, json_encode($request)."\n"); // text协议末尾有个换行符"\n"
+// 发送数据，注意5678端口是Text协议的端口，Text协议需要在数据末尾加上换行符
+fwrite($client, json_encode($request)."\n"); 
+// 读取推送结果
 $result = fgets($client, 10240000);
+// 解析JSON字符串
 $result = json_decode($result, true);
 var_export($result);
 ```
 
-最终结果打印
+请求响应结果
+```json
+{
+    "code": 0,
+    "msg": "记录列表",
+    "data": {}
+}
+```
 
-```phpregexp
-array (
-  'uid' => 2022,
-  'name' => 'webman',
-)
+请求响应异常结果
+```json
+{
+    "code": 404,
+    "msg": "接口调用类不存在",
+    "data": {}
+}
 ```
 
 ## Other
