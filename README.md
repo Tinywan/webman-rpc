@@ -16,15 +16,14 @@ composer require tinywan/rpc
 
 ### 服务端服务
 
-新建 `service/User.php` 服务(目录不存在自行创建)
-
+新建 `service/User.php` 服务（目录不存在自行创建）
 ```php
 namespace service;
 class User
 {
     public function get($args)
     {
-        return json_encode($args);
+        return response_rpc_json('获取成功', 0, $args);
     }
 }
 ```
@@ -79,8 +78,11 @@ var_export($result);
 ```json
 {
     "code": 0,
-    "msg": "记录列表",
-    "data": {}
+    "msg": "用户列表",
+    "data": {
+      "uid": 2024,
+      "username": "Tinywan"
+    }
 }
 ```
 
@@ -91,13 +93,6 @@ var_export($result);
     "msg": "接口调用类不存在",
     "data": {}
 }
-```
-
-## Other
-```php
-// Call the $foo->bar() method with 2 arguments
-$foo = new foo;
-call_user_func_array([$foo, "bar"], ["three", "four"]);
 ```
 
 ## 在client端发起一个远程伪代码中

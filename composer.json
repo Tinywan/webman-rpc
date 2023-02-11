@@ -18,7 +18,10 @@
   "autoload": {
     "psr-4": {
       "Tinywan\\Rpc\\": "src"
-    }
+    },
+    "files": [
+      "./function.php"
+    ]
   },
   "require-dev": {
     "workerman/webman": "^1.0",
