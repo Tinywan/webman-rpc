@@ -32,7 +32,7 @@ class RpcTextProtocol
         }
 
         $config = config('plugin.tinywan.rpc.app');
-        $class = $config['service']['namespace'] . $data['class'];
+        $class = $config['server']['namespace'] . $data['class'];
         if (!class_exists($class)) {
             return JsonParser::encode($connection, 404, sprintf('%s Class is not exist!', $data['class']));
         }
