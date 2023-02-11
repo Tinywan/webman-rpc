@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace Tinywan\Rpc\Protocol;
 
+use Throwable;
 use Tinywan\Rpc\JsonParser;
 use Workerman\Connection\TcpConnection;
 
@@ -23,28 +24,32 @@ class RpcTextProtocol
      */
     public function onMessage(TcpConnection $connection, string $string): ?bool
     {
-        static $instances = [];
+        try {
+            static $instances = [];
 
-        $data = json_decode($string, true);
-        $error = json_last_error();
-        if ($error != JSON_ERROR_NONE) {
-            return JsonParser::encode($connection, 400, sprintf('Data(%s) is not json format!', $string));
-        }
+            $data = json_decode($string, true);
+            $error = json_last_error();
+            if ($error != JSON_ERROR_NONE) {
+                return JsonParser::encode($connection, 400, sprintf('Data(%s) is not json format!', $string));
+            }
 
-        $config = config('plugin.tinywan.rpc.app');
-        $class = $config['server']['namespace'] . $data['class'];
-        if (!class_exists($class)) {
-            return JsonParser::encode($connection, 404, sprintf('%s Class is not exist!', $data['class']));
-        }
+            $config = config('plugin.tinywan.rpc.app');
+            $class = $config['server']['namespace'] . $data['class'];
+            if (!class_exists($class)) {
+                return JsonParser::encode($connection, 404, sprintf('%s Class is not exist!', $data['class']));
+            }
 
-        $method = $data['method'];
-        if (!method_exists($class, (string) $method)) {
-            return JsonParser::encode($connection, 404, sprintf('%s method is not exist!', $method));
+            $method = $data['method'];
+            if (!method_exists($class, (string) $method)) {
+                return JsonParser::encode($connection, 404, sprintf('%s method is not exist!', $method));
+            }
+            $args = $data['args'] ?? [];
+            if (!isset($instances[$class])) {
+                $instances[$class] = new $class();
+            }
+            return $connection->send(call_user_func_array([$instances[$class], $method], $args));
+        } catch (Throwable $th) {
+            return JsonParser::encode($connection, 500, $th->getMessage().'| file:'.$th->getFile().'| line:'.$th->getLine());
         }
-        $args = $data['args'] ?? [];
-        if (!isset($instances[$class])) {
-            $instances[$class] = new $class();
-        }
-        return $connection->send(call_user_func_array([$instances[$class], $method], $args));
     }
 }
