@@ -39,7 +39,7 @@ class RpcTextProtocol
 
         $method = $data['method'];
         if (!method_exists($class, (string) $method)) {
-            return JsonParser::encode($connection, 404, sprintf('%s method is not exist!', $data['class']));
+            return JsonParser::encode($connection, 404, sprintf('%s method is not exist!', $method));
         }
         $args = $data['args'] ?? [];
         if (!isset($instances[$class])) {
