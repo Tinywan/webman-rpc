@@ -23,7 +23,7 @@ class User
 {
     public function get($args)
     {
-        return response_rpc_json('获取成功', 0, $args);
+        return response_rpc_json(0,'获取成功', $args);
     }
 }
 ```
