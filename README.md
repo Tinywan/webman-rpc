@@ -51,8 +51,8 @@ var_export($res);
 
 ```php
 // 建立socket连接到内部推送端口
-$client = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
-if (false === $client) {
+$resource = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
+if (false === $resource) {
     throw new \Exception('rpc failed to connect: '.$errorMessage);
 }
 $request = [
@@ -66,9 +66,10 @@ $request = [
     ]
 ];
 // 发送数据，注意5678端口是Text协议的端口，Text协议需要在数据末尾加上换行符
-fwrite($client, json_encode($request)."\n"); 
+fwrite($resource, json_encode($request)."\n"); 
 // 读取推送结果
-$result = fgets($client, 10240000);
+$result = fgets($resource, 10240000);
+fclose($resource);
 // 解析JSON字符串
 $result = json_decode($result, true);
 var_export($result);

@@ -32,13 +32,17 @@ class Client
      */
     public function request(array $param)
     {
-        $client = stream_socket_client($this->address, $errno, $errorMessage);
-        if (false === $client) {
-            throw new RpcUnexpectedValueException('rpc failed to connect: '.$errorMessage);
+        try {
+            $resource = stream_socket_client($this->address, $errno, $errorMessage);
+            if (false === $resource) {
+                throw new RpcUnexpectedValueException('rpc failed to connect: '.$errorMessage);
+            }
+            fwrite($resource, json_encode($param)."\n");
+            $result = fgets($resource, 10240000);
+            fclose($resource);
+            return json_decode($result, true);
+        }catch (\Throwable $throwable) {
+            throw new RpcUnexpectedValueException('rpc request failed: '.$throwable->getMessage());
         }
-        fwrite($client, json_encode($param)."\n");
-        $result = fgets($client, 10240000);
-
-        return json_decode($result, true);
     }
 }
