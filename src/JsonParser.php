@@ -58,7 +58,7 @@ class JsonParser
     public static function encode(TcpConnection $connection,int $code,string $msg,array $data = []): ?bool
     {
         return $connection->send(json_encode([
-            'code' => 400,
+            'code' => $code,
             'msg' => $msg,
             'data' => $data,
         ],JSON_UNESCAPED_UNICODE));
