@@ -50,7 +50,7 @@ class RpcTextProtocol
             }
             return $connection->send(call_user_func_array([$instances[$class], $method], $args));
         } catch (Throwable $th) {
-            Logger::error('RPC Service Exception Message '.$th->getMessage(), [
+            Logger::error('RPC Service Exception '.$th->getMessage(), [
                 'error' => $th->getMessage(),
                 'file' => $th->getFile(),
                 'line' => $th->getLine()
