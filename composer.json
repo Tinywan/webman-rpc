@@ -11,9 +11,10 @@
     }
   ],
   "require": {
-    "php": ">=7.2",
-    "workerman/webman-framework": "^1.2.1",
-    "ext-json": "*"
+    "php": ">=7.4",
+    "workerman/webman-framework": "^1.5",
+    "ext-json": "*",
+    "tinywan/exception-handler": "^1.5"
   },
   "autoload": {
     "psr-4": {
@@ -27,5 +28,7 @@
     "workerman/webman": "^1.0",
     "phpstan/phpstan": "^1.4",
     "friendsofphp/php-cs-fixer": "^3.6"
+  },
+  "repositories": {
   }
 }

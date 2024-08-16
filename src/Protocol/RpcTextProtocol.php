@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace Tinywan\Rpc\Protocol;
 
 use Throwable;
+use Tinywan\ExceptionHandler\Logger;
 use Tinywan\Rpc\JsonParser;
 use Workerman\Connection\TcpConnection;
 
@@ -49,7 +50,12 @@ class RpcTextProtocol
             }
             return $connection->send(call_user_func_array([$instances[$class], $method], $args));
         } catch (Throwable $th) {
-            return JsonParser::encode($connection, 500, $th->getMessage().'| file:'.$th->getFile().'| line:'.$th->getLine());
+            Logger::error('RPC Service Exception Message '.$th->getMessage(), [
+                'error' => $th->getMessage(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine()
+            ]);
+            return JsonParser::encode($connection, 500, $th->getMessage());
         }
     }
 }
