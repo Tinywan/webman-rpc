@@ -29,26 +29,6 @@ class User
 ```
 ### 客户端调用
 
-#### webman框架使用
-```php
-use Tinywan\Rpc\Client;
-$request = [
-    'class'   => 'User',
-    'method'  => 'get',
-    'args'    => [
-        [
-            'uid' => 2023,
-            'username' => 'Tinywan',
-       ]
-    ]
-];
-$client = new Client('tcp://127.0.0.1:9512');
-$res = $client->request($request);
-var_export($res);
-```
-
-#### 非webman框架使用
-
 ```php
 // 建立socket连接到内部推送端口
 $resource = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
