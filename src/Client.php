@@ -33,31 +33,44 @@ class Client
      */
     public function request(array $param)
     {
+        $resource = null;
         try {
-            $resource = stream_socket_client($this->address, $errno, $errorMessage);
-            if (false === $resource) {
-                throw new RpcUnexpectedValueException('rpc failed to connect: '.$errorMessage);
+            // 连接阶段超时
+            $connectTimeout = config('plugin.tinywan.rpc.app.connect_timeout') ?? 3;
+            $resource = stream_socket_client(
+                $this->address,
+                $errno,
+                $errorMessage,
+                $connectTimeout
+            );
+
+            if (!is_resource($resource)) {
+                throw new RpcUnexpectedValueException('rpc request failed: ' . $errorMessage);
             }
 
-            // 如果param数组里面存在timeout参数，就设置超时时间
-            $timeout = $param['timeout'] ?? 0;
-            if ($timeout > 0){
-                stream_set_timeout($resource, $timeout);
-            }
+            // 读写超时
+            $timeout = (int)($param['timeout'] ?? config('plugin.tinywan.rpc.app.request_timeout') ?? 5);
+            stream_set_timeout($resource, $timeout);
 
+            // 发送请求
             fwrite($resource, json_encode($param)."\n");
-            $result = fgets($resource, 10240000);
 
-            // 检查是否超时,并报超时异常
+            // 实时检测超时
             $info = stream_get_meta_data($resource);
             if ($info['timed_out']) {
                 throw new RpcResponseException(Error::make(408, 'rpc request timeout'));
             }
 
-            fclose($resource);
-            return json_decode($result, true);
-        }catch (\Throwable $throwable) {
-            throw new RpcUnexpectedValueException('rpc request failed: '.$throwable->getMessage());
+            $result = fgets($resource, 10240000);
+            if ($result){
+                return json_decode(trim($result), true);
+            }
+        } catch (\Throwable $e) {
+            throw new RpcUnexpectedValueException('rpc request failed: '.$e->getMessage());
+        } finally {
+            if ($resource && is_resource($resource)) {
+                fclose($resource);
+            }
         }
     }
 }
