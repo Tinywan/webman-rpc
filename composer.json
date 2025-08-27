@@ -24,10 +24,17 @@
       "src/function.php"
     ]
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tinywan\\Rpc\\Tests\\": "tests"
+    }
+  },
   "require-dev": {
     "workerman/webman": "^1.0",
     "phpstan/phpstan": "^1.4",
-    "friendsofphp/php-cs-fixer": "^3.6"
+    "friendsofphp/php-cs-fixer": "^3.6",
+    "phpunit/phpunit": "^9.0",
+    "mockery/mockery": "^1.4"
   },
   "repositories": {
   }
