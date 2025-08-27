@@ -18,7 +18,7 @@ class Client
     /**
      * @var string
      */
-    private $address;
+    private string $address;
 
     /**
      * Client constructor.
@@ -35,8 +35,8 @@ class Client
     {
         $resource = null;
         try {
-            // 连接阶段超时
-            $connectTimeout = config('plugin.tinywan.rpc.app.connect_timeout') ?? 3;
+            // 使用缓存配置获取连接超时时间
+            $connectTimeout = Config::getConnectTimeout();
             $resource = stream_socket_client(
                 $this->address,
                 $errno,
@@ -48,8 +48,8 @@ class Client
                 throw new RpcUnexpectedValueException('rpc request failed: ' . $errorMessage);
             }
 
-            // 读写超时
-            $timeout = (int)($param['timeout'] ?? config('plugin.tinywan.rpc.app.request_timeout') ?? 5);
+            // 使用缓存配置获取请求超时时间
+            $timeout = (int)($param['timeout'] ?? Config::getRequestTimeout());
             stream_set_timeout($resource, $timeout);
 
             // 发送请求
