@@ -1,7 +1,7 @@
 {
   "name": "tinywan/rpc",
   "description": "simple rpc service for webman plugin",
-  "keywords": ["webman", "rpc", "plugin"],
+  "keywords": ["webman", "rpc", "plugin", "json", "jsonrpc"],
   "type": "library",
   "license": "MIT",
   "authors": [
@@ -12,8 +12,8 @@
   ],
   "require": {
     "php": ">=7.4",
-    "workerman/webman-framework": "^1.5||^2.0",
     "ext-json": "*",
+    "workerman/webman-framework": "^1.5||^2.0",
     "tinywan/exception-handler": "^1.5"
   },
   "autoload": {
