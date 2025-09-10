@@ -15,7 +15,7 @@ use Tinywan\Rpc\Error;
 
 class RpcResponseException extends \Exception
 {
-    protected $error;
+    protected Error $error;
 
     public function __construct(Error $error)
     {

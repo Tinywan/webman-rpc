@@ -31,18 +31,24 @@ class RpcTextProtocol
             $data = json_decode($string, true);
             $error = json_last_error();
             if ($error != JSON_ERROR_NONE) {
-                return JsonParser::encode($connection, 400, sprintf('Data(%s) is not json format!', $string));
+                return JsonParser::encode($connection,
+                    JsonParser::JSON_FORMAT_ERROR,
+                    sprintf('Data(%s) is not json format!', $string));
             }
 
             $config = config('plugin.tinywan.rpc.app');
             $class = $config['server']['namespace'] . $data['class'];
             if (!class_exists($class)) {
-                return JsonParser::encode($connection, 404, sprintf('%s Class is not exist!', $data['class']));
+                return JsonParser::encode($connection,
+                    JsonParser::INVALID_CLASS_ERROR,
+                    sprintf('%s Class is not exist!', $data['class']));
             }
 
             $method = $data['method'];
-            if (!method_exists($class, (string) $method)) {
-                return JsonParser::encode($connection, 404, sprintf('%s method is not exist!', $method));
+            if (!method_exists($class, (string)$method)) {
+                return JsonParser::encode($connection,
+                    JsonParser::INVALID_CLASS_ERROR,
+                    sprintf('%s Method is not exist!', $method));
             }
             $args = $data['args'] ?? [];
             if (!isset($instances[$class])) {
@@ -50,12 +56,12 @@ class RpcTextProtocol
             }
             return $connection->send(call_user_func_array([$instances[$class], $method], $args));
         } catch (Throwable $th) {
-            Logger::error('RPC Service Exception '.$th->getMessage(), [
+            Logger::error('RPC Service Exception ' . $th->getMessage(), [
                 'error' => $th->getMessage(),
                 'file' => $th->getFile(),
                 'line' => $th->getLine()
             ]);
-            return JsonParser::encode($connection, 500, $th->getMessage());
+            return JsonParser::encode($connection, JsonParser::SERVER_ERROR, $th->getMessage());
         }
     }
 }

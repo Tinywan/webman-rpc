@@ -3,7 +3,6 @@
 namespace Tinywan\Rpc\Tests;
 
 use Tinywan\Rpc\Client;
-use Tinywan\Rpc\Exception\RpcResponseException;
 use Tinywan\Rpc\Exception\RpcUnexpectedValueException;
 use PHPUnit\Framework\TestCase;
 

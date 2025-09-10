@@ -18,12 +18,12 @@ class Error implements \JsonSerializable
     /**
      * @var int
      */
-    protected $code = 0;
+    protected int $code = 0;
 
     /**
      * @var string
      */
-    protected $message = '';
+    protected string $message = '';
 
     /**
      * @var mixed

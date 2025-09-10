@@ -20,7 +20,30 @@ class JsonParser
      */
     const VERSION = '1.0';
 
+    /**
+     * Delimiter
+     */
     const DELIMITER = "@";
+
+    /**
+     * ok code
+     */
+    const OK = 0;
+
+    /**
+     * JSON-RPC error code
+     */
+    const JSON_FORMAT_ERROR = 400;
+
+    /**
+     * Invalid class error
+     */
+    const INVALID_CLASS_ERROR = 404;
+
+    /**
+     * Server error
+     */
+    const SERVER_ERROR = 500;
 
     /**
      * Parser error
@@ -55,12 +78,12 @@ class JsonParser
      * @param array $data
      * @return bool|null
      */
-    public static function encode(TcpConnection $connection,int $code,string $msg,array $data = []): ?bool
+    public static function encode(TcpConnection $connection, int $code, string $msg, array $data = []): ?bool
     {
         return $connection->send(json_encode([
             'code' => $code,
             'msg' => $msg,
             'data' => $data,
-        ],JSON_UNESCAPED_UNICODE));
+        ], JSON_UNESCAPED_UNICODE));
     }
 }
