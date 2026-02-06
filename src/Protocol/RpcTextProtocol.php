@@ -56,10 +56,20 @@ class RpcTextProtocol
             }
             return $connection->send(call_user_func_array([$instances[$class], $method], $args));
         } catch (Throwable $th) {
-            Logger::error('RPC Service Exception ' . $th->getMessage(), [
+            $errorMsg = 'RPC Service Exception '.$th->getMessage();
+            if (class_exists('\think\db\exception\DbException') && $th instanceof \think\db\exception\DbException) {
+                $dbData = $th->getData()['Database Status'] ?? [];
+                $errorMsg .= " \n" . '   > - Code：```' . $dbData['Error Code'] . "``` \n";
+                $errorMsg .= " \n" . '   > - Message：```' . $dbData['Error Message'] . "``` \n";
+                $errorMsg .= " \n" . '   > - SQL：```' . $dbData['Error SQL'] . "``` \n";
+            }
+            Logger::error($errorMsg, [
                 'error' => $th->getMessage(),
                 'file' => $th->getFile(),
-                'line' => $th->getLine()
+                'line' => $th->getLine(),
+                'domain' => $class ?? '',
+                'request_url' => $method ?? '',
+                'request_param' => $args ?? [],
             ]);
             return JsonParser::encode($connection, JsonParser::SERVER_ERROR, $th->getMessage());
         }
