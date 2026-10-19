@@ -31,11 +31,25 @@
   },
   "require-dev": {
     "workerman/webman": "^1.0",
-    "phpstan/phpstan": "^1.4",
-    "friendsofphp/php-cs-fixer": "^3.6",
-    "phpunit/phpunit": "^9.0",
+    "pestphp/pest": "^1.22",
     "mockery/mockery": "^1.4"
   },
-  "repositories": {
+  "scripts": {
+    "format:check": "mago format --check",
+    "format": "mago format",
+    "lint": "mago lint",
+    "analyse": "mago analyze",
+    "test": "pest",
+    "check": [
+      "@format:check",
+      "@lint",
+      "@analyse",
+      "@test"
+    ]
+  },
+  "config": {
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
   }
 }

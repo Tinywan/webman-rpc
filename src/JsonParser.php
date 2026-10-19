@@ -78,7 +78,7 @@ class JsonParser
      * @param array $data
      * @return bool|null
      */
-    public static function encode(TcpConnection $connection, int $code, string $msg, array $data = []): ?bool
+    public static function encode(TcpConnection $connection, int $code, string $msg, ?array $data = []): ?bool
     {
         return $connection->send(json_encode([
             'code' => $code,
