@@ -1,208 +1,240 @@
-# simple rpc service for webman plugin
+# Webman RPC Plugin
 
-[![Latest Stable Version](http://poser.pugx.org/tinywan/rpc/v)](https://packagist.org/packages/tinywan/rpc) 
-[![Total Downloads](http://poser.pugx.org/tinywan/rpc/downloads)](https://packagist.org/packages/tinywan/rpc) 
-[![Latest Unstable Version](http://poser.pugx.org/tinywan/rpc/v/unstable)](https://packagist.org/packages/tinywan/rpc) 
-[![License](http://poser.pugx.org/tinywan/rpc/license)](https://packagist.org/packages/tinywan/rpc)
-[![PHP Version Require](http://poser.pugx.org/tinywan/rpc/require/php)](https://packagist.org/packages/tinywan/rpc)
+[![Latest Stable Version](https://poser.pugx.org/tinywan/rpc/v)](https://packagist.org/packages/tinywan/rpc)
+[![Total Downloads](https://poser.pugx.org/tinywan/rpc/downloads)](https://packagist.org/packages/tinywan/rpc)
+[![Latest Unstable Version](https://poser.pugx.org/tinywan/rpc/v/unstable)](https://packagist.org/packages/tinywan/rpc)
+[![PHP Version Require](https://poser.pugx.org/tinywan/rpc/require/php)](https://packagist.org/packages/tinywan/rpc)
+[![License](https://poser.pugx.org/tinywan/rpc/license)](https://packagist.org/packages/tinywan/rpc)
 
-## 安装
+基于 [Webman](https://www.workerman.net/doc/webman/) 自定义进程开发的高性能轻量级 RPC 插件，采用 Text 文本协议与 JSON-RPC 规范，提供开箱即用的跨进程 / 跨服务器远程过程调用支持。
 
-```shell
+---
+
+## 🌟 特性概览
+
+- ⚡ **高性能异步驱动**：基于 Workerman 自定义进程与 Text 文本协议，低开销、低延迟。
+- 📦 **轻量无侵入**：服务端标准 PHP 类即服务，无复杂契约或代码生成。
+- 🛡️ **健壮异常处理**：内置异常捕获与日志监控集成（支持钉钉等事件告警）。
+- 🔌 **原生客户端**：提供 `Tinywan\Rpc\Client` 封装，支持灵活超时与流式通信。
+- 🧪 **工程化质量保障**：集成 **Mago** 现代代码格式化 / 静态分析与 **Pest** 自动化测试套件。
+
+---
+
+## 🏗️ 架构与调用时序
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Client as 客户端 (Client / Socket)
+    participant Worker as Webman 自定义进程 (RpcTextProtocol)
+    participant Service as 业务服务类 (service\User)
+
+    Client->>Worker: 建立 Socket 连接 (TCP / Text Protocol)
+    Client->>Worker: 发送 JSON 请求包 (Class, Method, Args) + \n
+    Worker->>Worker: 解析与反序列化，校验 Class & Method
+    alt 校验失败或格式错误
+        Worker-->>Client: 返回对应错误编码 (400 / 404 / 500)
+    else 校验通过
+        Worker->>Service: 反射调用对应服务与方法
+        Service-->>Worker: 返回业务响应数据 (response_rpc_json)
+        Worker-->>Client: 发送 JSON 响应结果 + \n
+    end
+    Client->>Client: 关闭连接并解析结果
+```
+
+---
+
+## 📦 安装
+
+在 Webman 项目根目录下执行：
+
+```bash
 composer require tinywan/rpc
 ```
 
-## 使用
+---
 
-### 服务端服务
+## ⚙️ 配置说明
 
-新建 `service/User.php` 服务（目录不存在自行创建）
+安装后插件配置文件位于 `config/plugin/tinywan/rpc/`：
+
+- **`process.php`**：进程配置，默认监听 `text://0.0.0.0:9512`
+- **`app.php`**：RPC 核心参数配置
+
+```php
+return [
+    'enable' => true,
+    'server' => [
+        'namespace' => 'service\\',                  // 默认服务类命名空间
+        'listen_text_address' => 'text://0.0.0.0:9512', // 服务监听地址
+    ],
+    'connect_timeout' => 5,                          // 客户端连接超时（秒）
+    'request_timeout' => 5,                          // 客户端请求超时（秒）
+];
+```
+
+---
+
+## 🚀 快速上手
+
+### 1. 服务端定义服务
+
+在 Webman 项目根目录下新建 `service/User.php`（目录不存在可自行创建）：
+
 ```php
 namespace service;
+
 class User
 {
-    public function get($args)
+    /**
+     * 获取用户信息
+     *
+     * @param array $args
+     * @return string
+     */
+    public function get(array $args): string
     {
-        return response_rpc_json(0,'获取成功', $args);
+        return response_rpc_json(0, '获取成功', [
+            'uid'      => $args['uid'] ?? 0,
+            'username' => 'Tinywan',
+            'time'     => date('Y-m-d H:i:s'),
+        ]);
     }
 }
 ```
-### 客户端调用
+
+> [!TIP]
+> 辅助函数 `response_rpc_json(int $code = 0, string $msg = 'success', array $data = [])` 可快速打包符合规范的 JSON 字符串。
+
+---
+
+### 2. 客户端调用
+
+#### 方式一：使用内置 `Client` 类（推荐）
 
 ```php
-// 建立socket连接到内部推送端口
-$resource = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage);
-if (false === $resource) {
-    throw new \Exception('rpc failed to connect: '.$errorMessage);
-}
-$request = [
-    'class'   => 'user',
+use Tinywan\Rpc\Client;
+
+$client = new Client('tcp://127.0.0.1:9512');
+
+$response = $client->request([
+    'class'   => 'User',
     'method'  => 'get',
     'args'    => [
-        [
-            'uid' => 2023,
-            'username' => 'Tinywan',
-        ]
+        ['uid' => 2026]
+    ],
+    'timeout' => 5, // 可选超时时间（秒）
+]);
+
+var_dump($response);
+```
+
+#### 方式二：原生 Socket 调用
+
+```php
+$resource = stream_socket_client('tcp://127.0.0.1:9512', $errorCode, $errorMessage, 5);
+if (false === $resource) {
+    throw new \RuntimeException('RPC connect failed: ' . $errorMessage);
+}
+
+$request = [
+    'class'  => 'User',
+    'method' => 'get',
+    'args'   => [
+        ['uid' => 2026]
     ]
 ];
-// 发送数据，注意5678端口是Text协议的端口，Text协议需要在数据末尾加上换行符
-fwrite($resource, json_encode($request)."\n"); 
-// 读取推送结果
+
+// Text 协议必须以换行符 \n 结尾
+fwrite($resource, json_encode($request) . "\n");
+
+// 读取响应结果
 $result = fgets($resource, 10240000);
 fclose($resource);
-// 解析JSON字符串
-$result = json_decode($result, true);
-var_export($result);
-```
 
-请求响应结果
-```json
-{
-    "code": 0,
-    "msg": "用户列表",
-    "data": {
-      "uid": 2024,
-      "username": "Tinywan"
-    }
-}
-```
-
-请求响应异常结果
-```json
-{
-    "code": 404,
-    "msg": "接口调用类不存在",
-    "data": {}
-}
-```
-
-## 在client端发起一个远程伪代码中
-
-client端调用server端 如果server端的代码为本地则是本地调用，如果server端的代码在另外一台机器就需要远程调用（Rpc协议）
-
-1. 服务端通过插件tinywan/rpc自定义进程实现一个文本text协议服务
-2. 客户端将Server和B方法，以及B方法可能带有的参数序列化
-3. 通过stream_socket_client把序列化的消息发送给服务端
-4. 服务端接收消息并反序列化
-5. 通过反射调用调用服务端的Server类下的B方法
-6. 服务端Server类B方法返回的结果序列化
-7. 将返回的序列化结果通过stream_socket_client发送给客户端
-8. 客户端通过反序列化得到结果
-
-## 调用编码
-```phpregexp
-1. 接口方法  
-   包括接口名、方法名  
-2. 方法参数  
-   包括参数类型、参数值  
-3. 调用属性  
-   包括调用属性信息，例如调用附件隐式参数、调用超时时间等  
--- 返回编码 --  
-1. 返回结果  
-   接口方法中定义的返回值  
-2. 返回码  
-   异常返回码  
-3. 返回异常信息  
-   调用异常信息  
+$response = json_decode(trim($result), true);
+var_dump($response);
 ```
 
 ---
 
-## 🧪 单元测试
+## 📋 协议与响应规范
 
-本项目包含完整的单元测试框架，确保代码质量和功能稳定性。
+### 1. 请求数据包规范
 
-### 运行测试
+| 字段 | 类型 | 必填 | 说明 |
+| :--- | :--- | :--- | :--- |
+| `class` | `string` | 是 | 服务类名（相对配置的命名空间） |
+| `method` | `string` | 是 | 服务方法名 |
+| `args` | `array` | 否 | 方法入参列表 |
+| `timeout` | `int` | 否 | 单次请求超时时间（秒） |
 
-#### 环境要求
-- PHP >= 7.4
-- Composer (可选，用于依赖管理)
+### 2. 响应数据包规范
 
-#### 快速运行
-```bash
-# 使用自定义测试脚本
-php run_tests.php
-```
+- **正常响应格式**：
+  ```json
+  {
+      "code": 0,
+      "msg": "获取成功",
+      "data": {
+          "uid": 2026,
+          "username": "Tinywan",
+          "time": "2026-10-19 10:00:00"
+      }
+  }
+  ```
 
-#### 完整测试环境
-```bash
-# 安装测试依赖
-composer install --dev
+- **异常响应格式**：
+  ```json
+  {
+      "code": 404,
+      "msg": "User Class is not exist!",
+      "data": []
+  }
+  ```
 
-# 运行所有测试
-./vendor/bin/phpunit
+### 3. 常见状态码
 
-# 运行特定测试文件
-./vendor/bin/phpunit tests/ConfigTest.php
-
-# 运行特定测试方法
-./vendor/bin/phpunit --filter testGetConfig tests/ConfigTest.php
-
-# 生成测试覆盖率报告
-./vendor/bin/phpunit --coverage-html coverage/
-```
-
-### 测试结果
-
-- **总测试数**: 11个
-- **通过率**: 100% ✅
-- **总体覆盖率**: 65%
-- **核心功能覆盖率**: 80%+
-
-### 测试覆盖范围
-
-| 模块 | 覆盖率 | 状态 |
-|------|--------|------|
-| 配置管理 (Config) | 85% | ✅ 良好 |
-| 错误处理 (Error) | 90% | ✅ 优秀 |
-| JSON处理 (JsonParser) | 70% | ⚠️ 一般 |
-| 客户端功能 (Client) | 30% | ❌ 需要改进 |
-| 异常处理 (Exception) | 80% | ✅ 良好 |
-
-### 查看测试报告
-
-项目包含详细的测试报告：
-
-- **📊 [完整HTML报告](tests/report.html)** - 详细的测试结果和分析
-- **📈 [统计图表](tests/test-chart.html)** - 可视化的测试数据图表
-- **📋 [覆盖率报告](tests/coverage-report.md)** - 详细的覆盖率分析
-
-### 测试文件结构
-
-```
-tests/
-├── ConfigTest.php              # 配置缓存类测试
-├── ClientTest.php              # RPC客户端测试
-├── ErrorTest.php               # 错误处理类测试
-├── JsonParserTest.php          # JSON解析器测试
-├── Protocol/
-│   └── RpcTextProtocolTest.php # 文本协议处理器测试
-├── Exception/
-│   ├── RpcResponseExceptionTest.php      # RPC响应异常测试
-│   └── RpcUnexpectedValueExceptionTest.php # RPC意外值异常测试
-├── TestCase.php               # 测试基类
-├── bootstrap.php              # 测试引导文件
-├── README.md                  # 测试文档
-├── report.html                # 详细HTML报告
-├── test-chart.html            # 统计图表
-└── coverage-report.md        # 覆盖率报告
-```
-
-### 测试特点
-
-- ✅ **独立运行**: 不依赖真实的RPC服务器
-- ✅ **模拟环境**: 完整模拟Webman框架环境
-- ✅ **边界测试**: 包含异常情况和边界条件
-- ✅ **可视化报告**: 详细的HTML报告和图表
-- ✅ **持续集成**: 支持自动化测试流程
-
-### 质量保证
-
-- **代码质量**: 良好的可测试性和依赖管理
-- **测试深度**: 覆盖主要功能和边界情况
-- **性能优化**: 配置缓存机制提升性能
-- **错误处理**: 完整的异常处理机制
+| 状态码 | 常量 | 描述 |
+| :--- | :--- | :--- |
+| `0` | `JsonParser::OK` | 业务请求成功 |
+| `400` | `JsonParser::JSON_FORMAT_ERROR` | 请求数据不是合法的 JSON 格式 |
+| `404` | `JsonParser::INVALID_CLASS_ERROR` | 目标类或方法不存在 |
+| `500` | `JsonParser::SERVER_ERROR` | 服务端执行异常 |
 
 ---
 
-*🤖 本项目由 [Claude Code](https://claude.ai/code) 协助开发*
+## 🛠️ 代码质量与测试
+
+本项目采用 **Mago**（代码检查与格式化）以及 **Pest**（单元与功能测试）：
+
+```bash
+# 格式化检查
+composer format:check
+
+# 自动格式化
+composer format
+
+# 代码语法与静态分析
+composer lint
+composer analyse
+
+# 执行单元测试
+composer test
+
+# 执行全部检查流程
+composer check
+```
+
+### Docker 容器测试（PHP 7.4）
+
+```bash
+# 在本地 dnmp-php74 容器中执行完整测试
+docker exec -w /var/www/webman/webman-rpc dnmp-php74 composer test
+```
+
+---
+
+## 📄 开源许可
+
+本项目遵循 [MIT License](LICENSE) 开源协议。
