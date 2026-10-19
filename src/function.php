@@ -10,8 +10,8 @@ if (!function_exists('response_rpc_json')) {
      * @return false|string
      * @author Tinywan(ShaoBo Wan)
      */
-    function response_rpc_json(int $code = 0, string $msg = 'success', array $data = [])
+    function response_rpc_json(int $code = 0, string $msg = 'success', ?array $data = [])
     {
-        return json_encode(['code' => $code, 'msg' => $msg, 'data' => $data],JSON_UNESCAPED_UNICODE);
+        return (string) json_encode(['code' => $code, 'msg' => $msg, 'data' => $data ?? []], JSON_UNESCAPED_UNICODE);
     }
 }

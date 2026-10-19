@@ -30,31 +30,50 @@ class RpcTextProtocol
 
             $data = json_decode($string, true);
             $error = json_last_error();
-            if ($error != JSON_ERROR_NONE) {
+            if ($error != JSON_ERROR_NONE || !is_array($data)) {
                 return JsonParser::encode($connection,
                     JsonParser::JSON_FORMAT_ERROR,
                     sprintf('Data(%s) is not json format!', $string));
             }
 
-            $config = config('plugin.tinywan.rpc.app');
-            $class = $config['server']['namespace'] . $data['class'];
+            if (!isset($data['class']) || !is_string($data['class']) || empty($data['class'])) {
+                return JsonParser::encode($connection,
+                    JsonParser::INVALID_REQUEST,
+                    'Invalid Request: class is required');
+            }
+
+            if (!isset($data['method']) || !is_string($data['method']) || empty($data['method'])) {
+                return JsonParser::encode($connection,
+                    JsonParser::INVALID_REQUEST,
+                    'Invalid Request: method is required');
+            }
+
+            $namespace = \Tinywan\Rpc\Config::getNamespace();
+            $class = $namespace . ltrim($data['class'], '\\');
             if (!class_exists($class)) {
                 return JsonParser::encode($connection,
                     JsonParser::INVALID_CLASS_ERROR,
                     sprintf('%s Class is not exist!', $data['class']));
             }
 
+            if (!isset($instances[$class])) {
+                $instances[$class] = new $class();
+            }
+
             $method = $data['method'];
-            if (!method_exists($class, (string)$method)) {
+            if (!is_callable([$instances[$class], $method])) {
                 return JsonParser::encode($connection,
                     JsonParser::INVALID_CLASS_ERROR,
                     sprintf('%s Method is not exist!', $method));
             }
-            $args = $data['args'] ?? [];
-            if (!isset($instances[$class])) {
-                $instances[$class] = new $class();
+
+            $args = isset($data['args']) && is_array($data['args']) ? $data['args'] : [];
+            $response = call_user_func_array([$instances[$class], $method], $args);
+            if (!is_string($response)) {
+                $response = (string) json_encode($response, JSON_UNESCAPED_UNICODE);
             }
-            return $connection->send(call_user_func_array([$instances[$class], $method], $args));
+
+            return $connection->send($response);
         } catch (Throwable $th) {
             $errorMsg = 'RPC Service Exception '.$th->getMessage();
             if (class_exists('\think\db\exception\DbException') && $th instanceof \think\db\exception\DbException) {

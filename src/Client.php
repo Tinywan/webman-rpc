@@ -53,20 +53,23 @@ class Client
             stream_set_timeout($resource, $timeout);
 
             // 发送请求
-            fwrite($resource, json_encode($param)."\n");
+            fwrite($resource, json_encode($param) . "\n");
 
-            // 实时检测超时
+            $result = fgets($resource, 10240000);
             $info = stream_get_meta_data($resource);
             if ($info['timed_out']) {
                 throw new RpcResponseException(Error::make(408, 'rpc request timeout'));
             }
 
-            $result = fgets($resource, 10240000);
-            if ($result){
-                return json_decode(trim($result), true);
+            if ($result === false) {
+                throw new RpcUnexpectedValueException('rpc read failed: connection closed or empty response');
             }
+
+            return json_decode(trim($result), true);
+        } catch (RpcResponseException $e) {
+            throw $e;
         } catch (\Throwable $e) {
-            throw new RpcUnexpectedValueException('rpc request failed: '.$e->getMessage());
+            throw new RpcUnexpectedValueException('rpc request failed: ' . $e->getMessage(), 0, $e);
         } finally {
             if ($resource && is_resource($resource)) {
                 fclose($resource);

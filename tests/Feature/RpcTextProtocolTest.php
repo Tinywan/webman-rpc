@@ -9,6 +9,11 @@ namespace service {
         {
             return (string) json_encode(['code' => 0, 'msg' => 'success', 'data' => $params]);
         }
+
+        public function getArray(array $params = []): array
+        {
+            return ['code' => 0, 'msg' => 'success', 'data' => $params];
+        }
     }
 }
 
@@ -34,6 +39,48 @@ namespace {
         expect($result)->toBeTrue();
     });
 
+    it('returns INVALID_REQUEST when class is missing or empty', function () {
+        $protocol = new RpcTextProtocol();
+        $connection = m::mock(TcpConnection::class);
+
+        $payload = json_encode([
+            'method' => 'get',
+            'args' => [],
+        ]);
+
+        $connection->shouldReceive('send')
+            ->once()
+            ->with(m::on(function ($msg) {
+                $decoded = json_decode($msg, true);
+                return $decoded['code'] === JsonParser::INVALID_REQUEST;
+            }))
+            ->andReturn(true);
+
+        $result = $protocol->onMessage($connection, $payload);
+        expect($result)->toBeTrue();
+    });
+
+    it('returns INVALID_REQUEST when method is missing or empty', function () {
+        $protocol = new RpcTextProtocol();
+        $connection = m::mock(TcpConnection::class);
+
+        $payload = json_encode([
+            'class' => 'User',
+            'args' => [],
+        ]);
+
+        $connection->shouldReceive('send')
+            ->once()
+            ->with(m::on(function ($msg) {
+                $decoded = json_decode($msg, true);
+                return $decoded['code'] === JsonParser::INVALID_REQUEST;
+            }))
+            ->andReturn(true);
+
+        $result = $protocol->onMessage($connection, $payload);
+        expect($result)->toBeTrue();
+    });
+
     it('returns INVALID_CLASS_ERROR when requested class does not exist', function () {
         $protocol = new RpcTextProtocol();
         $connection = m::mock(TcpConnection::class);
@@ -56,7 +103,7 @@ namespace {
         expect($result)->toBeTrue();
     });
 
-    it('returns INVALID_CLASS_ERROR when method does not exist on class', function () {
+    it('returns INVALID_CLASS_ERROR when method does not exist or is not callable', function () {
         $protocol = new RpcTextProtocol();
         $connection = m::mock(TcpConnection::class);
 
@@ -95,6 +142,29 @@ namespace {
                 'msg' => 'success',
                 'data' => ['id' => 101, 'name' => 'Tinywan'],
             ]))
+            ->andReturn(true);
+
+        $result = $protocol->onMessage($connection, $payload);
+        expect($result)->toBeTrue();
+    });
+
+    it('automatically serializes array returned by service method to JSON string', function () {
+        $protocol = new RpcTextProtocol();
+        $connection = m::mock(TcpConnection::class);
+
+        $payload = json_encode([
+            'class' => 'User',
+            'method' => 'getArray',
+            'args' => [['id' => 102]],
+        ]);
+
+        $connection->shouldReceive('send')
+            ->once()
+            ->with(json_encode([
+                'code' => 0,
+                'msg' => 'success',
+                'data' => ['id' => 102],
+            ], JSON_UNESCAPED_UNICODE))
             ->andReturn(true);
 
         $result = $protocol->onMessage($connection, $payload);
